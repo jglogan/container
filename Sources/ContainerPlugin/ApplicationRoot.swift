@@ -16,14 +16,17 @@
 
 import Foundation
 
-/// Snapshot of the health of container services and resources
-public struct SystemHealth: Sendable, Codable {
-    /// The full pathname of the application data root.
-    public let appRoot: URL
+public struct ApplicationRoot {
+    public static let environmentName = "CONTAINER_APP_ROOT"
 
-    /// The release version of the container services.
-    public let apiServerVersion: String
+    public static let defaultURL = FileManager.default.urls(
+        for: .applicationSupportDirectory,
+        in: .userDomainMask
+    ).first!.appendingPathComponent("com.apple.container")
 
-    /// The Git commit ID for the container services.
-    public let apiServerCommit: String
+    private static let envPath = ProcessInfo.processInfo.environment[Self.environmentName]
+
+    public static let url = envPath.map { URL(filePath: $0) } ?? defaultURL
+
+    public static let path = url.path(percentEncoded: false)
 }

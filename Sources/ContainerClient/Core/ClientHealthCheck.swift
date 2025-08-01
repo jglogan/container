@@ -14,8 +14,8 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
-import ContainerizationError
 import ContainerXPC
+import ContainerizationError
 import Foundation
 
 public enum ClientHealthCheck {
