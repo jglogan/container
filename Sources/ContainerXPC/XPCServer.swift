@@ -15,6 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 #if os(macOS)
+import CAuditToken
 import ContainerizationError
 import Foundation
 import Logging
@@ -145,8 +146,44 @@ public struct XPCServer: Sendable {
     }
 
     func handleMessage(connection: xpc_connection_t, object: xpc_object_t) async throws {
+        // all requests are dictionary-valued
+        guard xpc_get_type(object) == XPC_TYPE_DICTIONARY else {
+            log.error("invalid request - not a dictionary")
+            let message = XPCMessage(object: object)
+            let reply = message.reply()
+            let err = ContainerizationError(.invalidArgument, message: "invalid request")
+            reply.set(error: err)
+            xpc_connection_send_message(connection, reply.underlying)
+            return
+        }
+
+        // ensure client has our EUID
+        var token = audit_token_t()
+        xpc_dictionary_get_audit_token(object, &token)
+        let serverEuid = getuid()
+        let clientEuid = audit_token_to_euid(token)
+        guard clientEuid == serverEuid else {
+            log.error(
+                "xpc user id check failed",
+                metadata: [
+                    "server_euid": "\(serverEuid)",
+                    "client_euid": "\(clientEuid)",
+                ])
+            let message = XPCMessage(object: object)
+            let reply = message.reply()
+            let err = ContainerizationError(.invalidState, message: "unauthorized request")
+            reply.set(error: err)
+            xpc_connection_send_message(connection, reply.underlying)
+            return
+        }
+
         guard let route = object.route else {
-            log.error("empty route")
+            log.error("invalid request - empty route")
+            let message = XPCMessage(object: object)
+            let reply = message.reply()
+            let err = ContainerizationError(.invalidArgument, message: "invalid request")
+            reply.set(error: err)
+            xpc_connection_send_message(connection, reply.underlying)
             return
         }
 
