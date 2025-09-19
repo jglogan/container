@@ -79,6 +79,11 @@ extension Application {
         @Flag(name: .long, help: "Do not use cache")
         var noCache: Bool = false
 
+        @Option(name: .shortAndLong, help: ArgumentHelp("Output configuration for the build", valueName: "value"))
+        var output: [String] = {
+            ["type=oci"]
+        }()
+
         @Option(
             name: .long,
             help: ArgumentHelp("add the OS type to the build", valueName: "value"),
@@ -86,11 +91,6 @@ extension Application {
         )
         var os: [[String]] = {
             [["linux"]]
-        }()
-
-        @Option(name: .shortAndLong, help: ArgumentHelp("Output configuration for the build", valueName: "value"))
-        var output: [String] = {
-            ["type=oci"]
         }()
 
         @Option(
