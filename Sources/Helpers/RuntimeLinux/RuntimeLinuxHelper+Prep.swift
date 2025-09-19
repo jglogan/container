@@ -15,23 +15,19 @@
 //===----------------------------------------------------------------------===//
 
 import ArgumentParser
+import SocketForwarder
 
-extension Application {
-    struct SystemCommand: AsyncParsableCommand {
+extension RuntimeLinuxHelper {
+    struct Prep: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
-            commandName: "system",
-            abstract: "Manage system components",
-            subcommands: [
-                SystemDNS.self,
-                SystemKernel.self,
-                SystemLogs.self,
-                SystemPrep.self,
-                SystemProperty.self,
-                SystemStart.self,
-                SystemStatus.self,
-                SystemStop.self,
-            ],
-            aliases: ["s"]
+            commandName: "prep",
+            abstract: "Prepare system to run containers"
         )
+
+        func run() async throws {
+            let log = RuntimeLinuxHelper.setupLogger(debug: false)
+            log.info("triggering local network privacy prompt")
+            LocalNetworkPrivacy.triggerLocalNetworkPrivacyAlert()
+        }
     }
 }

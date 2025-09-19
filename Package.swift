@@ -135,6 +135,7 @@ let package = Package(
                 "ContainerSandboxService",
                 "ContainerVersion",
                 "ContainerXPC",
+                "SocketForwarder",
             ],
             path: "Sources/Helpers/RuntimeLinux"
         ),
