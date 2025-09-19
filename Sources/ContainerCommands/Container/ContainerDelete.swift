@@ -28,16 +28,16 @@ extension Application {
             abstract: "Delete one or more containers",
             aliases: ["rm"])
 
-        @Flag(name: .shortAndLong, help: "Force the removal of one or more running containers")
-        var force = false
-
         @Flag(name: .shortAndLong, help: "Remove all containers")
         var all = false
+
+        @Flag(name: .shortAndLong, help: "Force the removal of one or more running containers")
+        var force = false
 
         @OptionGroup
         var global: Flags.Global
 
-        @Argument(help: "Container IDs/names")
+        @Argument(help: "Container IDs")
         var containerIDs: [String] = []
 
         public func validate() throws {

@@ -30,7 +30,7 @@ extension Application {
         @OptionGroup
         var global: Flags.Global
 
-        @Argument(help: "Containers to inspect")
+        @Argument(help: "Container IDs")
         var containers: [String]
 
         public func run() async throws {

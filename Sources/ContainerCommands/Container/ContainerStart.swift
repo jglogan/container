@@ -31,13 +31,13 @@ extension Application {
         @Flag(name: .shortAndLong, help: "Attach STDOUT/STDERR")
         var attach = false
 
-        @Flag(name: .shortAndLong, help: "Attach container's STDIN")
+        @Flag(name: .shortAndLong, help: "Attach STDIN")
         var interactive = false
 
         @OptionGroup
         var global: Flags.Global
 
-        @Argument(help: "Container's ID")
+        @Argument(help: "Container ID")
         var containerID: String
 
         public func run() async throws {

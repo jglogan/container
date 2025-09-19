@@ -27,22 +27,22 @@ extension Application {
 
         public static let configuration = CommandConfiguration(
             commandName: "logs",
-            abstract: "Fetch container stdio or boot logs"
+            abstract: "Fetch container logs"
         )
-
-        @OptionGroup
-        var global: Flags.Global
-
-        @Flag(name: .shortAndLong, help: "Follow log output")
-        var follow: Bool = false
 
         @Flag(name: .long, help: "Display the boot log for the container instead of stdio")
         var boot: Bool = false
 
-        @Option(name: [.customShort("n")], help: "Number of lines to show from the end of the logs. If not provided this will print all of the logs")
+        @Flag(name: .shortAndLong, help: "Follow log output")
+        var follow: Bool = false
+
+        @Option(name: .short, help: "Number of lines to show from the end of the logs. If not provided this will print all of the logs")
         var numLines: Int?
 
-        @Argument(help: "Container to fetch logs for")
+        @OptionGroup
+        var global: Flags.Global
+
+        @Argument(help: "Container ID")
         var container: String
 
         public func run() async throws {

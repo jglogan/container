@@ -26,19 +26,19 @@ extension Application {
 
         public static let configuration = CommandConfiguration(
             commandName: "kill",
-            abstract: "Kill one or more running containers")
+            abstract: "Kill or signal one or more running containers")
 
-        @Option(name: .shortAndLong, help: "Signal to send the container(s)")
-        var signal: String = "KILL"
-
-        @Flag(name: .shortAndLong, help: "Kill all running containers")
+        @Flag(name: .shortAndLong, help: "Kill or signal all running containers")
         var all = false
 
-        @Argument(help: "Container IDs")
-        var containerIDs: [String] = []
+        @Option(name: .shortAndLong, help: "Signal to send to the container(s)")
+        var signal: String = "KILL"
 
         @OptionGroup
         var global: Flags.Global
+
+        @Argument(help: "Container IDs")
+        var containerIDs: [String] = []
 
         public func validate() throws {
             if containerIDs.count == 0 && !all {

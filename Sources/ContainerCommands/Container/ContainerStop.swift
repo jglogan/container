@@ -31,17 +31,17 @@ extension Application {
         @Flag(name: .shortAndLong, help: "Stop all running containers")
         var all = false
 
-        @Option(name: .shortAndLong, help: "Signal to send the container(s)")
+        @Option(name: .shortAndLong, help: "Signal to send the containers")
         var signal: String = "SIGTERM"
 
-        @Option(name: .shortAndLong, help: "Seconds to wait before killing the container(s)")
+        @Option(name: .shortAndLong, help: "Seconds to wait before killing the containers")
         var time: Int32 = 5
-
-        @Argument
-        var containerIDs: [String] = []
 
         @OptionGroup
         var global: Flags.Global
+
+        @Argument(help: "Container IDs")
+        var containerIDs: [String] = []
 
         public func validate() throws {
             if containerIDs.count == 0 && !all {
