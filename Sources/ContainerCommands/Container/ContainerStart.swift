@@ -38,7 +38,7 @@ extension Application {
         var global: Flags.Global
 
         @Argument(help: "Container ID")
-        var containerID: String
+        var containerId: String
 
         public func run() async throws {
             var exitCode: Int32 = 127
@@ -52,7 +52,7 @@ extension Application {
             }
             progress.start()
 
-            let container = try await ClientContainer.get(id: containerID)
+            let container = try await ClientContainer.get(id: containerId)
             do {
                 let detach = !self.attach && !self.interactive
                 let io = try ProcessIO.create(
@@ -70,7 +70,7 @@ extension Application {
                 if detach {
                     try await process.start()
                     try io.closeAfterStart()
-                    print(self.containerID)
+                    print(self.containerId)
                     return
                 }
 

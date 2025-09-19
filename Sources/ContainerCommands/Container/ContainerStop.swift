@@ -41,20 +41,20 @@ extension Application {
         var global: Flags.Global
 
         @Argument(help: "Container IDs")
-        var containerIDs: [String] = []
+        var containerIds: [String] = []
 
         public func validate() throws {
-            if containerIDs.count == 0 && !all {
+            if containerIds.count == 0 && !all {
                 throw ContainerizationError(.invalidArgument, message: "no containers specified and --all not supplied")
             }
-            if containerIDs.count > 0 && all {
+            if containerIds.count > 0 && all {
                 throw ContainerizationError(
                     .invalidArgument, message: "explicitly supplied container IDs conflicts with the --all flag")
             }
         }
 
         public mutating func run() async throws {
-            let set = Set<String>(containerIDs)
+            let set = Set<String>(containerIds)
             var containers = [ClientContainer]()
             if self.all {
                 containers = try await ClientContainer.list()

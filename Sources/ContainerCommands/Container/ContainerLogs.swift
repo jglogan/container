@@ -43,11 +43,11 @@ extension Application {
         var global: Flags.Global
 
         @Argument(help: "Container ID")
-        var container: String
+        var containerId: String
 
         public func run() async throws {
             do {
-                let container = try await ClientContainer.get(id: container)
+                let container = try await ClientContainer.get(id: containerId)
                 let fhs = try await container.logs()
                 let fileHandle = boot ? fhs[1] : fhs[0]
 
@@ -59,7 +59,7 @@ extension Application {
             } catch {
                 throw ContainerizationError(
                     .invalidArgument,
-                    message: "failed to fetch container logs for \(container): \(error)"
+                    message: "failed to fetch container logs for \(containerId): \(error)"
                 )
             }
         }
