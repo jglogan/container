@@ -31,11 +31,11 @@ extension Application {
         var global: Flags.Global
 
         @Argument(help: "Container IDs")
-        var containers: [String]
+        var containerIds: [String]
 
         public func run() async throws {
             let objects: [any Codable] = try await ClientContainer.list().filter {
-                containers.contains($0.id)
+                containerIds.contains($0.id)
             }.map {
                 PrintableContainer($0)
             }
