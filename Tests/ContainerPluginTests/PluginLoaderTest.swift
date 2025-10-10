@@ -90,7 +90,7 @@ struct PluginLoaderTest {
         let env = [
             "CONTAINER_FOO": "bar",
             "CONTAINER_BAZ": "qux",
-            "OTHER_VAR": "value"
+            "OTHER_VAR": "value",
         ]
         let filtered = PluginLoader.filterEnvironment(env: env, additionalAllowKeys: [])
 
@@ -106,18 +106,19 @@ struct PluginLoaderTest {
             "HTTPS_PROXY": "https://proxy:8443",
             "no_proxy": "localhost,127.0.0.1",
             "NO_PROXY": "localhost,127.0.0.1",
-            "OTHER_VAR": "value"
+            "OTHER_VAR": "value",
         ]
         let filtered = PluginLoader.filterEnvironment(env: env)
 
-        #expect(filtered == [
-            "http_proxy": "http://proxy:8080",
-            "HTTP_PROXY": "http://proxy:8080",
-            "https_proxy": "https://proxy:8443",
-            "HTTPS_PROXY": "https://proxy:8443",
-            "no_proxy": "localhost,127.0.0.1",
-            "NO_PROXY": "localhost,127.0.0.1"
-        ])
+        #expect(
+            filtered == [
+                "http_proxy": "http://proxy:8080",
+                "HTTP_PROXY": "http://proxy:8080",
+                "https_proxy": "https://proxy:8443",
+                "HTTPS_PROXY": "https://proxy:8443",
+                "no_proxy": "localhost,127.0.0.1",
+                "NO_PROXY": "localhost,127.0.0.1",
+            ])
     }
 
     @Test
@@ -126,14 +127,15 @@ struct PluginLoaderTest {
             "CONTAINER_FOO": "bar",
             "http_proxy": "http://proxy:8080",
             "OTHER_VAR": "value",
-            "ANOTHER_VAR": "value2"
+            "ANOTHER_VAR": "value2",
         ]
         let filtered = PluginLoader.filterEnvironment(env: env)
 
-        #expect(filtered == [
-            "CONTAINER_FOO": "bar",
-            "http_proxy": "http://proxy:8080"
-        ])
+        #expect(
+            filtered == [
+                "CONTAINER_FOO": "bar",
+                "http_proxy": "http://proxy:8080",
+            ])
     }
 
     @Test
@@ -141,14 +143,15 @@ struct PluginLoaderTest {
         let env = [
             "CONTAINER_FOO": "bar",
             "CUSTOM_KEY": "custom_value",
-            "OTHER_VAR": "value"
+            "OTHER_VAR": "value",
         ]
         let filtered = PluginLoader.filterEnvironment(env: env, additionalAllowKeys: ["CUSTOM_KEY"])
 
-        #expect(filtered == [
-            "CONTAINER_FOO": "bar",
-            "CUSTOM_KEY": "custom_value"
-        ])
+        #expect(
+            filtered == [
+                "CONTAINER_FOO": "bar",
+                "CUSTOM_KEY": "custom_value",
+            ])
     }
 
     @Test
@@ -163,7 +166,7 @@ struct PluginLoaderTest {
         let env = [
             "PATH": "/usr/bin",
             "HOME": "/Users/test",
-            "USER": "testuser"
+            "USER": "testuser",
         ]
         let filtered = PluginLoader.filterEnvironment(env: env, additionalAllowKeys: [])
 
