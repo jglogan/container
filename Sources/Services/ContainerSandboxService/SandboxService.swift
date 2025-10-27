@@ -796,8 +796,8 @@ public actor SandboxService {
 
         if let socketUrl = Self.sshAuthSocketHostUrl(config: config) {
             let socketPath = socketUrl.path(percentEncoded: false)
-            let attrs = try FileManager.default.attributesOfItem(atPath: socketPath)
-            let permissions = (attrs[.posixPermissions] as? NSNumber)
+            let attrs = try? FileManager.default.attributesOfItem(atPath: socketPath)
+            let permissions = (attrs?[.posixPermissions] as? NSNumber)
                 .map { FilePermissions(rawValue: mode_t($0.intValue)) }
             let socketConfig = UnixSocketConfiguration(
                 source: socketUrl,
