@@ -16,6 +16,7 @@
 
 import CVersion
 import ContainerizationError
+import ContainerVersion
 import Foundation
 
 public enum DefaultsStore {
@@ -41,8 +42,10 @@ public enum DefaultsStore {
     }
 
     public static func get(key: DefaultsStore.Keys) -> String {
-        udSuite.string(forKey: key.rawValue)
-            ?? Bundle.main.infoDictionary?["\(Self.userDefaultDomain).\(key.rawValue)"] as? String
+        let execURL = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
+        let appBundle = Bundle.appBundle(memberURL: execURL)
+        return udSuite.string(forKey: key.rawValue)
+            ?? appBundle?.infoDictionary?["\(Self.userDefaultDomain).\(key.rawValue)"] as? String
             ?? key.defaultValue
     }
 
@@ -58,7 +61,9 @@ public enum DefaultsStore {
         if udSuite.object(forKey: key.rawValue) != nil {
             return udSuite.bool(forKey: key.rawValue)
         }
-        return Bundle.main.infoDictionary?["\(Self.userDefaultDomain).\(key.rawValue)"] as? Bool
+        let execURL = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
+        let appBundle = Bundle.appBundle(memberURL: execURL)
+        return appBundle?.infoDictionary?["\(Self.userDefaultDomain).\(key.rawValue)"] as? Bool
             ?? Bool(key.defaultValue)
     }
 
