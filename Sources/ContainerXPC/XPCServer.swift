@@ -166,7 +166,7 @@ public struct XPCServer: Sendable {
         let clientEuid = audit_token_to_euid(token)
         guard clientEuid == serverEuid else {
             log.error(
-                "xpc user id check failed",
+                "unauthorized request - uid mismatch",
                 metadata: [
                     "server_euid": "\(serverEuid)",
                     "client_euid": "\(clientEuid)",
