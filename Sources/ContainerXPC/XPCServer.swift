@@ -171,7 +171,6 @@ public struct XPCServer: Sendable {
                     "server_euid": "\(serverEuid)",
                     "client_euid": "\(clientEuid)",
                 ])
-            log.error("invalid request - empty route")
             Self.replyWithError(
                 connection: connection,
                 object: object,
