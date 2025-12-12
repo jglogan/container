@@ -33,7 +33,7 @@ struct NetworkConfigurationTest {
             "0-_.1",
         ]
         for id in ids {
-            let subnet = "192.168.64.1/24"
+            let subnet = try CIDRv4("192.168.64.1/24")
             let labels = [
                 "foo": "bar",
                 "baz": String(repeating: "0", count: 4096 - "baz".count - "=".count),
@@ -50,7 +50,7 @@ struct NetworkConfigurationTest {
             "Foo",
         ]
         for id in ids {
-            let subnet = "192.168.64.1/24"
+            let subnet = try CIDRv4("192.168.64.1/24")
             let labels = [
                 "foo": "bar",
                 "baz": String(repeating: "0", count: 4096 - "baz".count - "=".count),
@@ -66,22 +66,6 @@ struct NetworkConfigurationTest {
         }
     }
 
-    @Test func testValidationBadSubnet() throws {
-        let id = "foo"
-        let subnet = "192.168.64.1"
-        let labels = [
-            "foo": "bar",
-            "baz": String(repeating: "0", count: 4096 - "baz".count - "=".count),
-        ]
-        #expect {
-            _ = try NetworkConfiguration(id: id, mode: .nat, subnet: subnet, labels: labels)
-        } throws: { error in
-            guard let err = error as? NetworkAddressError else { return false }
-            #expect(err.description.starts(with: "invalid CIDR block"))
-            return true
-        }
-    }
-
     @Test func testValidationGoodLabels() throws {
         let allLabels = [
             ["com.example.my-label": "bar"],
@@ -91,7 +75,7 @@ struct NetworkConfigurationTest {
         ]
         for labels in allLabels {
             let id = "foo"
-            let subnet = "192.168.64.1/24"
+            let subnet = try CIDRv4("192.168.64.1/24")
             _ = try NetworkConfiguration(id: id, mode: .nat, subnet: subnet, labels: labels)
         }
     }
@@ -106,7 +90,7 @@ struct NetworkConfigurationTest {
         ]
         for labels in allLabels {
             let id = "foo"
-            let subnet = "192.168.64.1/24"
+            let subnet = try CIDRv4("192.168.64.1/24")
             #expect {
                 _ = try NetworkConfiguration(id: id, mode: .nat, subnet: subnet, labels: labels)
             } throws: { error in

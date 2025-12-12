@@ -35,7 +35,7 @@ public actor NetworkService: Sendable {
             throw ContainerizationError(.invalidState, message: "invalid network state - network \(state.id) must be running")
         }
 
-        let subnet = try CIDRAddress(status.address)
+        let subnet = status.address
 
         let size = Int(subnet.upper.value - subnet.lower.value - 3)
         self.allocator = try AttachmentAllocator(lower: subnet.lower.value + 2, size: size)
@@ -61,12 +61,12 @@ public actor NetworkService: Sendable {
         let hostname = try message.hostname()
         let macAddress = message.string(key: NetworkKeys.macAddress.rawValue)
         let index = try await allocator.allocate(hostname: hostname)
-        let subnet = try CIDRAddress(status.address)
-        let ip = IPv4Address(fromValue: index)
+        let subnet = status.address
+        let ip = IPv4Address(index)
         let attachment = Attachment(
             network: state.id,
             hostname: hostname,
-            address: try CIDRAddress(ip, prefixLength: subnet.prefixLength).description,
+            address: try CIDRv4(ip, prefix: subnet.prefix),
             gateway: status.gateway,
             macAddress: macAddress
         )
@@ -110,12 +110,12 @@ public actor NetworkService: Sendable {
             return reply
         }
 
-        let address = IPv4Address(fromValue: index)
-        let subnet = try CIDRAddress(status.address)
+        let address = IPv4Address(index)
+        let subnet = status.address
         let attachment = Attachment(
             network: state.id,
             hostname: hostname,
-            address: try CIDRAddress(address, prefixLength: subnet.prefixLength).description,
+            address: try CIDRv4(address, prefix: subnet.prefix),
             gateway: status.gateway
         )
         log?.debug(

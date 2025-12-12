@@ -30,7 +30,7 @@ public struct NetworkConfiguration: Codable, Sendable, Identifiable {
     public let creationDate: Date
 
     /// The preferred CIDR address for the subnet, if specified
-    public let subnet: String?
+    public let subnet: CIDRv4?
 
     /// Key-value labels for the network.
     public var labels: [String: String] = [:]
@@ -39,7 +39,7 @@ public struct NetworkConfiguration: Codable, Sendable, Identifiable {
     public init(
         id: String,
         mode: NetworkMode,
-        subnet: String? = nil,
+        subnet: CIDRv4? = nil,
         labels: [String: String] = [:]
     ) throws {
         self.id = id
@@ -66,18 +66,26 @@ public struct NetworkConfiguration: Codable, Sendable, Identifiable {
         id = try container.decode(String.self, forKey: .id)
         creationDate = try container.decodeIfPresent(Date.self, forKey: .creationDate) ?? Date(timeIntervalSince1970: 0)
         mode = try container.decode(NetworkMode.self, forKey: .mode)
-        subnet = try container.decodeIfPresent(String.self, forKey: .subnet)
+        let subnetText = try container.decodeIfPresent(String.self, forKey: .subnet)
+        subnet = try subnetText.map { try CIDRv4($0) }
         labels = try container.decodeIfPresent([String: String].self, forKey: .labels) ?? [:]
         try validate()
+    }
+
+    /// Encode the configuration to the supplied Encoder.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(id, forKey: .id)
+        try container.encode(creationDate, forKey: .creationDate)
+        try container.encode(mode, forKey: .mode)
+        try container.encodeIfPresent(subnet?.description, forKey: .subnet)
+        try container.encode(labels, forKey: .labels)
     }
 
     private func validate() throws {
         guard id.isValidNetworkID() else {
             throw ContainerizationError(.invalidArgument, message: "invalid network ID: \(id)")
-        }
-
-        if let subnet {
-            _ = try CIDRAddress(subnet)
         }
 
         for (key, value) in labels {

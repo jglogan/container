@@ -283,14 +283,19 @@ public actor NetworksService {
             serviceIdentifier,
         ]
 
-        if let subnet = (try configuration.subnet.map { try CIDRAddress($0) }) {
-            var existingCidrs: [CIDRAddress] = []
+        if let subnet = (configuration.subnet.map { $0 }) {
+            var existingCidrs: [CIDRv4] = []
             for networkState in networkStates.values {
                 if case .running(_, let status) = networkState {
-                    existingCidrs.append(try CIDRAddress(status.address))
+                    existingCidrs.append(status.address)
                 }
             }
-            let overlap = existingCidrs.first { $0.overlaps(cidr: subnet) }
+            let overlap = existingCidrs.first {
+                $0.contains(subnet.lower)
+                || $0.contains(subnet.upper)
+                || subnet.contains($0.lower)
+                || subnet.contains($0.upper)
+            }
             if let overlap {
                 throw ContainerizationError(.exists, message: "subnet \(subnet) overlaps an existing network with subnet \(overlap)")
             }
