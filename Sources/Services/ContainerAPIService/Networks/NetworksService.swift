@@ -292,9 +292,9 @@ public actor NetworksService {
             }
             let overlap = existingCidrs.first {
                 $0.contains(subnet.lower)
-                || $0.contains(subnet.upper)
-                || subnet.contains($0.lower)
-                || subnet.contains($0.upper)
+                    || $0.contains(subnet.upper)
+                    || subnet.contains($0.lower)
+                    || subnet.contains($0.upper)
             }
             if let overlap {
                 throw ContainerizationError(.exists, message: "subnet \(subnet) overlaps an existing network with subnet \(overlap)")
