@@ -226,27 +226,43 @@ extension Application {
         }
 
         private func printStatsTable(_ statsData: [StatsSnapshot]) {
-            let header = [["Container ID", "Cpu %", "Memory Usage", "Net Rx/Tx", "Block I/O", "Pids"]]
-            var rows = header
+            let headerRow = ["Container ID", "Cpu %", "Memory Usage", "Net Rx/Tx", "Block I/O", "Pids"]
+            let notAvailable = "--"
+            var rows = [headerRow]
 
             for snapshot in statsData {
+                var row = [snapshot.container.id]
                 let stats1 = snapshot.stats1
                 let stats2 = snapshot.stats2
 
-                let cpuPercent = Self.calculateCPUPercent(
-                    cpuUsageUsec1: stats1.cpuUsageUsec,
-                    cpuUsageUsec2: stats2.cpuUsageUsec,
-                    timeDeltaUsec: 2_000_000  // 2 seconds in microseconds
-                )
-                let cpuStr = String(format: "%.2f%%", cpuPercent)
+                if let cpuUsageUsec1 = stats1.cpuUsageUsec, let cpuUsageUsec2 = stats2.cpuUsageUsec {
+                    let cpuPercent = Self.calculateCPUPercent(
+                        cpuUsageUsec1: cpuUsageUsec1,
+                        cpuUsageUsec2: cpuUsageUsec2,
+                        timeDeltaUsec: 2_000_000  // 2 seconds in microseconds
+                    )
+                    let cpuStr = String(format: "%.2f%%", cpuPercent)
+                    row.append(cpuStr)
+                } else {
+                    row.append(notAvailable)
+                }
 
-                let memUsageStr = "\(Self.formatBytes(stats2.memoryUsageBytes)) / \(Self.formatBytes(stats2.memoryLimitBytes))"
-                let netStr = "\(Self.formatBytes(stats2.networkRxBytes)) / \(Self.formatBytes(stats2.networkTxBytes))"
-                let blockStr = "\(Self.formatBytes(stats2.blockReadBytes)) / \(Self.formatBytes(stats2.blockWriteBytes))"
+                let memUsageStr = stats2.memoryUsageBytes.map { Self.formatBytes($0) } ?? notAvailable
+                let memLimitStr = stats2.memoryLimitBytes.map { Self.formatBytes($0) } ?? notAvailable
+                row.append("\(memUsageStr) / \(memLimitStr)")
 
-                let pidsStr = "\(stats2.numProcesses)"
+                let netRxStr = stats2.networkRxBytes.map { Self.formatBytes($0) } ?? notAvailable
+                let netTxStr = stats2.networkTxBytes.map { Self.formatBytes($0) } ?? notAvailable
+                row.append("\(netRxStr) / \(netTxStr)")
 
-                rows.append([snapshot.container.id, cpuStr, memUsageStr, netStr, blockStr, pidsStr])
+                let blkReadStr = stats2.memoryUsageBytes.map { Self.formatBytes($0) } ?? notAvailable
+                let blkWriteStr = stats2.memoryLimitBytes.map { Self.formatBytes($0) } ?? notAvailable
+                row.append("\(blkReadStr) / \(blkWriteStr)")
+
+                let pidsStr = stats2.numProcesses.map { "\($0)" } ?? notAvailable
+                row.append(pidsStr)
+
+                rows.append(row)
             }
 
             // Always print header, even if no containers

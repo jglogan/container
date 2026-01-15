@@ -36,6 +36,9 @@ extension Application {
             })
         var input: String?
 
+        @Flag(name: .shortAndLong, help: "Load images even if invalid member files are detected")
+        public var force = false
+
         @OptionGroup
         var global: Flags.Global
 
@@ -81,7 +84,12 @@ extension Application {
             progress.start()
 
             progress.set(description: "Loading tar archive")
-            let loaded = try await ClientImage.load(from: input ?? tempFile.path())
+            let (loaded, rejectedMembers) = try await ClientImage.load(
+                from: input ?? tempFile.path(),
+                force: force)
+            if !rejectedMembers.isEmpty {
+                log.warning("archive contains invalid members", metadata: ["paths": "\(rejectedMembers)"])
+            }
 
             let taskManager = ProgressTaskCoordinator()
             let unpackTask = await taskManager.startTask()

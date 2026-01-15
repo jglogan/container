@@ -354,8 +354,11 @@ extension Application {
                         guard let dest = exp.destination else {
                             throw ContainerizationError(.invalidArgument, message: "dest is required \(exp.rawValue)")
                         }
-                        let loaded = try await ClientImage.load(from: dest.absolutePath())
-
+                        let (loaded, rejectedMembers) = try await ClientImage.load(from: dest.absolutePath())
+                        guard rejectedMembers.isEmpty else {
+                            log.error("archive contains invalid members", metadata: ["paths": "\(rejectedMembers)"])
+                            throw ContainerizationError(.internalError, message: "failed to load archive")
+                        }
                         for image in loaded {
                             try Task.checkCancellation()
                             try await image.unpack(platform: nil, progressUpdate: ProgressTaskCoordinator.handler(for: unpackTask, from: unpackProgress.handler))
