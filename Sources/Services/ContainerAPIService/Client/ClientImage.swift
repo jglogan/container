@@ -280,7 +280,7 @@ extension ClientImage {
         let _ = try await client.send(request)
     }
 
-    public static func load(from tarFile: String, force: Bool = false) async throws -> ([ClientImage], [String]) {
+    public static func load(from tarFile: String, force: Bool = false) async throws -> ImageLoadResult {
         let client = newXPCClient()
         let request = newRequest(.imageLoad)
         request.set(key: .filePath, value: tarFile)
@@ -291,7 +291,7 @@ extension ClientImage {
         let images = descriptions.map { desc in
             ClientImage(description: desc)
         }
-        return (images, rejectedMembers)
+        return ImageLoadResult(images: images, rejectedMembers: rejectedMembers)
     }
 
     public static func cleanupOrphanedBlobs() async throws -> ([String], UInt64) {

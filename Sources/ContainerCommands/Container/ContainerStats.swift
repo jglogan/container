@@ -198,15 +198,15 @@ extension Application {
         ///   - timeDeltaUsec: Time delta between samples in microseconds
         /// - Returns: CPU percentage where 100% = one fully utilized core
         static func calculateCPUPercent(
-            cpuUsageUsec1: UInt64,
-            cpuUsageUsec2: UInt64,
-            timeDeltaUsec: UInt64
+            cpuUsage1: Duration,
+            cpuUsage2: Duration,
+            timeInterval: Duration
         ) -> Double {
             let cpuDelta =
-                cpuUsageUsec2 > cpuUsageUsec1
-                ? cpuUsageUsec2 - cpuUsageUsec1
-                : 0
-            return (Double(cpuDelta) / Double(timeDeltaUsec)) * 100.0
+                cpuUsage2 > cpuUsage1
+                ? cpuUsage2 - cpuUsage1
+                : .seconds(0)
+            return (cpuDelta / timeInterval) * 100.0
         }
 
         static func formatBytes(_ bytes: UInt64) -> String {
@@ -237,9 +237,9 @@ extension Application {
 
                 if let cpuUsageUsec1 = stats1.cpuUsageUsec, let cpuUsageUsec2 = stats2.cpuUsageUsec {
                     let cpuPercent = Self.calculateCPUPercent(
-                        cpuUsageUsec1: cpuUsageUsec1,
-                        cpuUsageUsec2: cpuUsageUsec2,
-                        timeDeltaUsec: 2_000_000  // 2 seconds in microseconds
+                        cpuUsage1: .microseconds(cpuUsageUsec1),
+                        cpuUsage2: .microseconds(cpuUsageUsec2),
+                        timeInterval: .seconds(2)
                     )
                     let cpuStr = String(format: "%.2f%%", cpuPercent)
                     row.append(cpuStr)
@@ -255,8 +255,8 @@ extension Application {
                 let netTxStr = stats2.networkTxBytes.map { Self.formatBytes($0) } ?? notAvailable
                 row.append("\(netRxStr) / \(netTxStr)")
 
-                let blkReadStr = stats2.memoryUsageBytes.map { Self.formatBytes($0) } ?? notAvailable
-                let blkWriteStr = stats2.memoryLimitBytes.map { Self.formatBytes($0) } ?? notAvailable
+                let blkReadStr = stats2.blockReadBytes.map { Self.formatBytes($0) } ?? notAvailable
+                let blkWriteStr = stats2.blockWriteBytes.map { Self.formatBytes($0) } ?? notAvailable
                 row.append("\(blkReadStr) / \(blkWriteStr)")
 
                 let pidsStr = stats2.numProcesses.map { "\($0)" } ?? notAvailable
