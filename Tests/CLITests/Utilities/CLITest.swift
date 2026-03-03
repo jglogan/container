@@ -15,10 +15,13 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import ContainerLog
 import ContainerResource
 import Containerization
 import ContainerizationOS
 import Foundation
+import Logging
+import SystemPackage
 import Testing
 
 class CLITest {
@@ -46,9 +49,27 @@ class CLITest {
         let status: NetworkStatus?
     }
 
-    init() throws {}
+    let testUUID: String
+    var log: Logger
 
-    let testUUID = UUID().uuidString
+    init() throws {
+        let uuid = UUID().uuidString
+        self.testUUID = uuid
+        let logger = Logger(label: "com.apple.container.test") { label in
+            if let logRootString = ProcessInfo.processInfo.environment["CLITEST_LOG_ROOT"],
+                !logRootString.isEmpty
+            {
+                let logPath = FilePath(logRootString + "/clitests/" + uuid + ".log")
+                if let handler = try? FileLogHandler(label: label, category: "clitests", path: logPath) {
+                    return handler
+                }
+            }
+            return StderrLogHandler()
+        }
+        self.log = logger
+        self.log[metadataKey: "testID"] = "\(uuid)"
+        self.log[metadataKey: "suite"] = "\(type(of: self))"
+    }
 
     var testDir: URL! {
         let tempDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -110,6 +131,15 @@ class CLITest {
     }
 
     func run(arguments: [String], stdin: Data? = nil, currentDirectory: URL? = nil) throws -> (outputData: Data, output: String, error: String, status: Int32) {
+        let commandStart = ISO8601DateFormatter().string(from: Date())
+        log.info(
+            "command start",
+            metadata: [
+                "commandStart": "\(commandStart)",
+                "args": "\(arguments.joined(separator: " "))",
+            ]
+        )
+
         let process = Process()
         process.executableURL = try executablePath
         process.arguments = arguments
@@ -141,6 +171,16 @@ class CLITest {
 
         let output = String(data: outputData, encoding: .utf8) ?? ""
         let error = String(data: errorData, encoding: .utf8) ?? ""
+
+        log.info(
+            "command end",
+            metadata: [
+                "commandStart": "\(commandStart)",
+                "status": "\(process.terminationStatus)",
+                "stdout": "\(output.prefix(64))",
+                "stderr": "\(error.prefix(64))",
+            ]
+        )
 
         return (outputData: outputData, output: output, error: error, status: process.terminationStatus)
     }
