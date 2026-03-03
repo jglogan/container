@@ -177,8 +177,8 @@ class CLITest {
             metadata: [
                 "commandStart": "\(commandStart)",
                 "status": "\(process.terminationStatus)",
-                "stdout": "\(output.prefix(64))",
-                "stderr": "\(error.prefix(64))",
+                "stdout": "\(String(output.prefix(64)).debugDescription)",
+                "stderr": "\(String(error.prefix(64)).debugDescription)",
             ]
         )
 
