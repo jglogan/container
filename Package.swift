@@ -319,6 +319,13 @@ let package = Package(
                 "ContainerNetworkService",
             ]
         ),
+        .testTarget(
+            name: "ContainerXPCTests",
+            dependencies: [
+                .product(name: "Logging", package: "swift-log"),
+                "ContainerXPC",
+            ]
+        ),
         .target(
             name: "ContainerNetworkServiceClient",
             dependencies: [
@@ -356,6 +363,7 @@ let package = Package(
                 .product(name: "ContainerizationOS", package: "containerization"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 "ContainerAPIClient",
+                "ContainerNetworkServiceClient",
                 "ContainerOS",
                 "ContainerPersistence",
                 "ContainerResource",
