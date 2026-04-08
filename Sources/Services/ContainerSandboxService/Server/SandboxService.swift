@@ -949,8 +949,8 @@ public actor SandboxService {
             metadata: ["network": "\(networkId)"]
         )
         // Attempt graceful container cleanup under the lock before exiting.
-        await self.lock.withLock { _ in
-            guard let ctrInfo = await self.container else { return }
+        let shouldCancel = await self.lock.withLock { _ -> Bool in
+            guard let ctrInfo = await self.container else { return false }
             switch await self.state {
             case .running, .booted:
                 await self.setState(.stopping)
@@ -963,13 +963,16 @@ public actor SandboxService {
                     )
                 }
                 await self.setState(.stopped)
+                return true
             default:
-                break
+                return false
             }
         }
         // Cancel the main XPC connection. This causes the XPC server's listen() to return,
         // unwinding the task group in RuntimeLinuxHelper and exiting the process.
-        xpc_connection_cancel(self.connection)
+        if shouldCancel {
+            xpc_connection_cancel(self.connection)
+        }
     }
 
     private func getDefaultNameservers(networkConfigs: [AttachmentConfiguration]) async throws -> [String] {
