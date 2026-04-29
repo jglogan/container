@@ -49,20 +49,20 @@ public enum RequestScheme: String, Sendable {
         case .http, .https:
             return self
         case .auto:
-            return Self.isInternalHost(host: host) ? .http : .https
+            return Self.isInternalHost(host: host, dnsDomain: DefaultsStore.getOptional(key: .defaultDNSDomain)) ? .http : .https
         }
     }
 
     /// Checks if the given `host` string is a private IP address
     /// or a domain typically reachable only on the local system.
-    private static func isInternalHost(host: String) -> Bool {
+    internal static func isInternalHost(host: String, dnsDomain: String? = nil) -> Bool {
         // The localhost hostname is private.
         if host == "localhost" {
             return true
         }
 
-        // If it corresponds to our default domain name, treat it as private.
-        if let dnsDomain = DefaultsStore.getOptional(key: .defaultDNSDomain) {
+        // If hostname uses the provided DNS domain, treat it as private.
+        if let dnsDomain {
             if host.hasSuffix(".\(dnsDomain)") {
                 return true
             }
