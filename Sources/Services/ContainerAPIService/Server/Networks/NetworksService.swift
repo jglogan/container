@@ -28,7 +28,7 @@ import Foundation
 import Logging
 import SystemPackage
 
-public actor NetworksService {
+public actor NetworksService: NetworksServiceProtocol {
     struct NetworkServiceState {
         var networkState: NetworkState
         var client: ContainerNetworkServiceClient.NetworkClient

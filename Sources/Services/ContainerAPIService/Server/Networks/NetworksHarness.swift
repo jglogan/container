@@ -23,9 +23,9 @@ import Logging
 
 public struct NetworksHarness: Sendable {
     let log: Logging.Logger
-    let service: NetworksService
+    let service: any NetworksServiceProtocol
 
-    public init(service: NetworksService, log: Logging.Logger) {
+    public init(service: any NetworksServiceProtocol, log: Logging.Logger) {
         self.log = log
         self.service = service
     }

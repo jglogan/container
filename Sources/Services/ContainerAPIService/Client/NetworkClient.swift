@@ -46,14 +46,34 @@ public struct NetworkClient: Sendable {
     /// The reserved name that indicates a container should have no network attachment.
     public static let noNetworkName = "none"
 
-    private let xpcClient: XPCClient
+    private let transport: ClientTransport
 
     /// Creates a new network client connected to the given service endpoint.
     ///
     /// - Parameter serviceIdentifier: The Mach service name of the API server.
     ///   Defaults to ``defaultServiceIdentifier``.
     public init(serviceIdentifier: String = Self.defaultServiceIdentifier) {
-        self.xpcClient = XPCClient(service: serviceIdentifier)
+        let client = XPCClient(service: serviceIdentifier)
+        self.transport = { msg, timeout in try await client.send(msg, responseTimeout: timeout) }
+    }
+
+    /// Creates a network client that routes messages through a custom transport.
+    ///
+    /// Use this initialiser in tests to capture or inspect outgoing ``XPCMessage``
+    /// values without an actual XPC connection:
+    ///
+    /// ```swift
+    /// var captured: XPCMessage?
+    /// let client = NetworkClient { message, _ in
+    ///     captured = message
+    ///     return fakeListResponse()
+    /// }
+    /// _ = try await client.list()
+    /// ```
+    ///
+    /// - Parameter transport: A ``ClientTransport`` closure invoked for every outgoing message.
+    init(transport: @escaping ClientTransport) {
+        self.transport = transport
     }
 
     @discardableResult
@@ -61,7 +81,7 @@ public struct NetworkClient: Sendable {
         message: XPCMessage,
         timeout: Duration? = XPCClient.xpcRegistrationTimeout
     ) async throws -> XPCMessage {
-        try await xpcClient.send(message, responseTimeout: timeout)
+        try await transport(message, timeout)
     }
 
     /// Creates a new network with the given configuration.

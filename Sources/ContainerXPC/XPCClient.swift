@@ -18,6 +18,13 @@
 import ContainerizationError
 import Foundation
 
+/// A closure that sends an XPC message and returns the response.
+///
+/// The second parameter is an optional per-call response timeout; pass `nil`
+/// to use the transport's default. Inject a custom closure in tests to capture
+/// outgoing messages without a real XPC connection.
+public typealias ClientTransport = @Sendable (XPCMessage, Duration?) async throws -> XPCMessage
+
 public final class XPCClient: Sendable {
     /// The maximum amount of time to wait for a request to a recently
     /// registered XPC service. Once a service has launched, XPC
