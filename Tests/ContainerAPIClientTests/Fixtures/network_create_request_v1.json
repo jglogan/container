@@ -1,0 +1,16 @@
+{
+  "bools" : {
+
+  },
+  "data" : {
+    "networkConfig" : "eyJjcmVhdGlvbkRhdGUiOjgwMDIzMjc3Mi44OTk5NDIsImlkIjoiZml4dHVyZS1uZXQiLCJsYWJlbHMiOnt9LCJtb2RlIjoibmF0In0="
+  },
+  "int64s" : {
+
+  },
+  "protocolVersion" : "1",
+  "route" : "networkCreate",
+  "strings" : {
+    "networkId" : "fixture-net"
+  }
+}

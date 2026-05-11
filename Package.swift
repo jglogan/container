@@ -197,8 +197,13 @@ let package = Package(
             name: "ContainerAPIServiceTests",
             dependencies: [
                 .product(name: "Containerization", package: "containerization"),
+                .product(name: "Logging", package: "swift-log"),
+                "ContainerAPIClient",
+                "ContainerAPIService",
                 "ContainerResource",
                 "ContainerSandboxServiceClient",
+                "ContainerTestSupport",
+                "ContainerXPC",
             ]
         ),
         .target(
@@ -231,6 +236,7 @@ let package = Package(
                 "ContainerAPIClient",
                 "ContainerPersistence",
                 "ContainerTestSupport",
+                "ContainerXPC",
             ]
         ),
         .executableTarget(
@@ -529,7 +535,8 @@ let package = Package(
         .target(
             name: "ContainerTestSupport",
             dependencies: [
-                .product(name: "SystemPackage", package: "swift-system")
+                .product(name: "SystemPackage", package: "swift-system"),
+                "ContainerXPC",
             ]
         ),
     ]
