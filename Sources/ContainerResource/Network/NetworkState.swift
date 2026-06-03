@@ -30,20 +30,33 @@ public struct NetworkPluginStatus: Codable, Sendable {
     /// The value is nil if the IPv6 subnet cannot be determined at creation time.
     public let ipv6Subnet: CIDRv6?
 
+    /// When the plugin transitioned to running.
+    public let startedDate: Date
+
+    /// Plugin info with the resolved variant — always has a non-nil variant since the
+    /// plugin resolves "auto" to a concrete value at start time.
+    public let pluginInfo: NetworkPluginInfo
+
     public init(
         ipv4Subnet: CIDRv4,
         ipv4Gateway: IPv4Address,
         ipv6Subnet: CIDRv6?,
+        startedDate: Date = Date(),
+        pluginInfo: NetworkPluginInfo
     ) {
         self.ipv4Subnet = ipv4Subnet
         self.ipv4Gateway = ipv4Gateway
         self.ipv6Subnet = ipv6Subnet
+        self.startedDate = startedDate
+        self.pluginInfo = pluginInfo
     }
 
     enum CodingKeys: String, CodingKey {
         case ipv4Subnet
         case ipv4Gateway
         case ipv6Subnet
+        case startedDate
+        case pluginInfo
         // TODO: retain for deserialization compatibility for now, remove later
         case address
         case gateway
@@ -66,6 +79,10 @@ public struct NetworkPluginStatus: Codable, Sendable {
         }
         ipv6Subnet = try container.decodeIfPresent(String.self, forKey: .ipv6Subnet)
             .map { try CIDRv6($0) }
+        startedDate = try container.decodeIfPresent(Date.self, forKey: .startedDate) ?? Date(timeIntervalSince1970: 0)
+        pluginInfo =
+            try container.decodeIfPresent(NetworkPluginInfo.self, forKey: .pluginInfo)
+            ?? NetworkPluginInfo(plugin: "container-network-vmnet")
     }
 
     /// Encode the configuration to the supplied Encoder.
@@ -75,6 +92,8 @@ public struct NetworkPluginStatus: Codable, Sendable {
         try container.encode(ipv4Subnet, forKey: .ipv4Subnet)
         try container.encode(ipv4Gateway, forKey: .ipv4Gateway)
         try container.encodeIfPresent(ipv6Subnet, forKey: .ipv6Subnet)
+        try container.encode(startedDate, forKey: .startedDate)
+        try container.encode(pluginInfo, forKey: .pluginInfo)
     }
 }
 
@@ -112,7 +131,8 @@ public enum NetworkState: Codable, Sendable {
 
     public var pluginInfo: NetworkPluginInfo? {
         switch self {
-        case .created(let configuration), .running(let configuration, _): configuration.pluginInfo
+        case .created(let configuration): configuration.pluginInfo
+        case .running(_, let status): status.pluginInfo
         }
     }
 }

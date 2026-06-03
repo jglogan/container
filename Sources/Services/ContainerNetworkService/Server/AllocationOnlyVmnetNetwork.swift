@@ -27,11 +27,13 @@ public actor AllocationOnlyVmnetNetwork: Network {
 
     private let log: Logger
     private var _state: NetworkState
+    private let resolvedPluginInfo: NetworkPluginInfo
 
     /// Configure a bridge network that allows external system access using
     /// network address translation.
     public init(
         configuration: NetworkConfiguration,
+        pluginInfo: NetworkPluginInfo,
         log: Logger
     ) throws {
         guard configuration.mode == .nat else {
@@ -43,6 +45,7 @@ public actor AllocationOnlyVmnetNetwork: Network {
         }
 
         self.log = log
+        self.resolvedPluginInfo = pluginInfo
         self._state = .created(configuration)
     }
 
@@ -74,6 +77,7 @@ public actor AllocationOnlyVmnetNetwork: Network {
             ipv4Subnet: ipv4Subnet,
             ipv4Gateway: gateway,
             ipv6Subnet: nil,
+            pluginInfo: resolvedPluginInfo
         )
         self._state = .running(configuration, status)
         log.info(

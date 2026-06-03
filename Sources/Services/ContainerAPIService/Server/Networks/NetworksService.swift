@@ -124,31 +124,18 @@ public actor NetworksService {
             let client = try Self.getClient(configuration: configuration)
             var networkState = try await client.state()
 
-            // FIXME: Temporary workaround for persisted configuration being overwritten
-            // by what comes back from the network helper, which messes up creationDate.
-            // FIXME: Temporarily need to override the plugin information with the info from
-            // the helper, so we can ensure that older networks get a variant value.
-            let finalConfiguration: NetworkConfiguration
+            let finalConfiguration = try NetworkConfiguration(
+                id: configuration.id,
+                mode: configuration.mode,
+                ipv4Subnet: configuration.ipv4Subnet,
+                ipv6Subnet: configuration.ipv6Subnet,
+                labels: updatedLabels.map { try .init($0) } ?? configuration.labels,
+                pluginInfo: configuration.pluginInfo ?? NetworkPluginInfo(plugin: "container-network-vmnet")
+            )
             switch networkState {
-            case .created(let helperConfig):
-                finalConfiguration = try NetworkConfiguration(
-                    id: configuration.id,
-                    mode: configuration.mode,
-                    ipv4Subnet: configuration.ipv4Subnet,
-                    ipv6Subnet: configuration.ipv6Subnet,
-                    labels: updatedLabels.map { try .init($0) } ?? configuration.labels,
-                    pluginInfo: helperConfig.pluginInfo
-                )
+            case .created:
                 networkState = NetworkState.created(finalConfiguration)
-            case .running(let helperConfig, let status):
-                finalConfiguration = try NetworkConfiguration(
-                    id: configuration.id,
-                    mode: configuration.mode,
-                    ipv4Subnet: configuration.ipv4Subnet,
-                    ipv6Subnet: configuration.ipv6Subnet,
-                    labels: updatedLabels.map { try .init($0) } ?? configuration.labels,
-                    pluginInfo: helperConfig.pluginInfo
-                )
+            case .running(_, let status):
                 networkState = NetworkState.running(finalConfiguration, status)
             }
 
@@ -220,42 +207,40 @@ public actor NetworksService {
                 throw ContainerizationError(.exists, message: "network \(configuration.id) already exists")
             }
 
-            // Create and start the network.
-            try await self.registerService(configuration: configuration)
-            let client = try Self.getClient(configuration: configuration)
+            // Persist the configuration first so the network helper can read entity.json.
+            try await self.store.create(configuration)
 
-            // Ensure the network is running, and set up the persistent network state
-            // using our configuration data
-            guard case .running(let helperConfig, let status) = try await client.state() else {
-                throw ContainerizationError(.invalidState, message: "network \(configuration.id) failed to start")
-            }
-
-            let finalConfiguration = try NetworkConfiguration(
-                id: configuration.id,
-                mode: configuration.mode,
-                ipv4Subnet: configuration.ipv4Subnet,
-                ipv6Subnet: configuration.ipv6Subnet,
-                labels: configuration.labels,
-                pluginInfo: helperConfig.pluginInfo
-            )
-
-            let networkState: NetworkState = .running(finalConfiguration, status)
-            let serviceState = NetworkServiceState(networkState: networkState, client: client)
-            await self.setServiceState(key: finalConfiguration.id, value: serviceState)
-
-            // Persist the configuration data.
+            // Create and start the network, rolling back the store write on any failure.
             do {
-                try await self.store.create(finalConfiguration)
+                try await self.registerService(configuration: configuration)
+                let client = try Self.getClient(configuration: configuration)
+
+                guard case .running(_, let status) = try await client.state() else {
+                    throw ContainerizationError(.invalidState, message: "network \(configuration.id) failed to start")
+                }
+
+                let networkState: NetworkState = .running(configuration, status)
+                let serviceState = NetworkServiceState(networkState: networkState, client: client)
+                await self.setServiceState(key: configuration.id, value: serviceState)
                 return networkState
             } catch {
-                await self.removeServiceState(key: finalConfiguration.id)
                 do {
-                    try await self.deregisterService(configuration: finalConfiguration)
+                    try await self.store.delete(configuration.id)
+                } catch {
+                    self.log.error(
+                        "failed to delete network from store during rollback",
+                        metadata: [
+                            "id": "\(configuration.id)",
+                            "error": "\(error.localizedDescription)",
+                        ])
+                }
+                do {
+                    try await self.deregisterService(configuration: configuration)
                 } catch {
                     self.log.error(
                         "failed to deregister network service after failed creation",
                         metadata: [
-                            "id": "\(finalConfiguration.id)",
+                            "id": "\(configuration.id)",
                             "error": "\(error.localizedDescription)",
                         ])
                 }
@@ -415,14 +400,13 @@ public actor NetworksService {
         guard let serviceIdentifier = networkPlugin.getMachService(instanceId: configuration.id, type: .network) else {
             throw ContainerizationError(.invalidArgument, message: "unsupported network mode \(configuration.mode.rawValue)")
         }
+        let entityPath = try store.entityPath(configuration.id)
         var args = [
             "start",
-            "--id",
-            configuration.id,
             "--service-identifier",
             serviceIdentifier,
-            "--mode",
-            configuration.mode.rawValue,
+            "--entity-path",
+            entityPath.string,
         ]
         if debugHelpers {
             args.append("--debug")
@@ -444,8 +428,6 @@ public actor NetworksService {
             if let overlap {
                 throw ContainerizationError(.exists, message: "IPv4 subnet \(ipv4Subnet) overlaps an existing network with subnet \(overlap)")
             }
-
-            args += ["--subnet", ipv4Subnet.description]
         }
 
         if let ipv6Subnet = configuration.ipv6Subnet {
@@ -464,15 +446,7 @@ public actor NetworksService {
             if let overlap {
                 throw ContainerizationError(.exists, message: "IPv6 subnet \(ipv6Subnet) overlaps an existing network with subnet \(overlap)")
             }
-
-            args += ["--subnet-v6", ipv6Subnet.description]
         }
-
-        if let variant = configuration.pluginInfo?.variant {
-            args += ["--variant", variant]
-        }
-
-        let entityPath = try store.entityPath(configuration.id)
         try pluginLoader.registerWithLaunchd(
             plugin: networkPlugin,
             pluginStateRoot: URL(filePath: entityPath.string),

@@ -22,16 +22,13 @@ import ContainerPlugin
 import ContainerResource
 import ContainerXPC
 import ContainerizationError
-import ContainerizationExtras
 import Foundation
 import Logging
 
-enum Variant: String, ExpressibleByArgument {
+enum Variant: String {
     case reserved
     case allocationOnly
 }
-
-extension NetworkMode: ExpressibleByArgument {}
 
 extension NetworkVmnetHelper {
     struct Start: AsyncParsableCommand {
@@ -46,30 +43,18 @@ extension NetworkVmnetHelper {
         @Option(name: .long, help: "XPC service identifier")
         var serviceIdentifier: String
 
-        @Option(name: .shortAndLong, help: "Network identifier")
-        var id: String
-
-        @Option(name: .long, help: "Network mode")
-        var mode: NetworkMode = .nat
-
-        @Option(name: .customLong("subnet"), help: "CIDR address for the IPv4 subnet")
-        var ipv4Subnet: String?
-
-        @Option(name: .customLong("subnet-v6"), help: "CIDR address for the IPv6 prefix")
-        var ipv6Subnet: String?
-
-        @Option(name: .long, help: "Variant of the network helper to use.")
-        var variant: Variant = {
-            guard #available(macOS 26, *) else {
-                return .allocationOnly
-            }
-            return .reserved
-        }()
+        @Option(name: .customLong("entity-path"), help: "Path to the network entity directory containing entity.json")
+        var entityPath: String
 
         var logRoot = LogRoot.path
 
         func run() async throws {
             let commandName = NetworkVmnetHelper._commandName
+            let configURL = URL(filePath: entityPath).appending(component: "entity.json")
+            let configData = try Data(contentsOf: configURL)
+            let configuration = try JSONDecoder().decode(NetworkConfiguration.self, from: configData)
+
+            let id = configuration.id
             let logPath = logRoot.map { $0.appending("\(commandName)-\(id).log") }
             let log = ServiceLogger.bootstrap(category: "NetworkVmnetHelper", metadata: ["id": "\(id)"], debug: debug, logPath: logPath)
             log.info("starting helper", metadata: ["name": "\(commandName)"])
@@ -79,23 +64,10 @@ extension NetworkVmnetHelper {
 
             do {
                 log.info("configuring XPC server")
-                let ipv4Subnet = try self.ipv4Subnet.map { try CIDRv4($0) }
-                let ipv6Subnet = try self.ipv6Subnet.map { try CIDRv6($0) }
-                let pluginInfo = NetworkPluginInfo(
-                    plugin: NetworkVmnetHelper._commandName,
-                    variant: self.variant.rawValue
-                )
-
-                let configuration = try NetworkConfiguration(
-                    id: id,
-                    mode: mode,
-                    ipv4Subnet: ipv4Subnet,
-                    ipv6Subnet: ipv6Subnet,
-                    pluginInfo: pluginInfo
-                )
+                let variant = resolveVariant(from: configuration)
                 let network = try Self.createNetwork(
                     configuration: configuration,
-                    variant: self.variant,
+                    variant: variant,
                     log: log
                 )
                 try await network.start()
@@ -124,10 +96,26 @@ extension NetworkVmnetHelper {
             }
         }
 
+        private func resolveVariant(from configuration: NetworkConfiguration) -> Variant {
+            if let variantStr = configuration.pluginInfo?.variant,
+                let parsed = Variant(rawValue: variantStr)
+            {
+                return parsed
+            }
+            if #available(macOS 26, *) {
+                return .reserved
+            }
+            return .allocationOnly
+        }
+
         private static func createNetwork(configuration: NetworkConfiguration, variant: Variant, log: Logger) throws -> Network {
+            let pluginInfo = NetworkPluginInfo(
+                plugin: configuration.pluginInfo?.plugin ?? NetworkVmnetHelper._commandName,
+                variant: variant.rawValue
+            )
             switch variant {
             case .allocationOnly:
-                return try AllocationOnlyVmnetNetwork(configuration: configuration, log: log)
+                return try AllocationOnlyVmnetNetwork(configuration: configuration, pluginInfo: pluginInfo, log: log)
             case .reserved:
                 guard #available(macOS 26, *) else {
                     throw ContainerizationError(
@@ -135,7 +123,7 @@ extension NetworkVmnetHelper {
                         message: "variant ReservedVmnetNetwork is only available on macOS 26+"
                     )
                 }
-                return try ReservedVmnetNetwork(configuration: configuration, log: log)
+                return try ReservedVmnetNetwork(configuration: configuration, pluginInfo: pluginInfo, log: log)
             }
         }
     }

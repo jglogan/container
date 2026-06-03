@@ -44,11 +44,13 @@ public final class ReservedVmnetNetwork: Network {
 
     private let stateMutex: Mutex<State>
     private let log: Logger
+    private let resolvedPluginInfo: NetworkPluginInfo
 
     /// Configure a bridge network that allows external system access using
     /// network address translation.
     public init(
         configuration: NetworkConfiguration,
+        pluginInfo: NetworkPluginInfo,
         log: Logger
     ) throws {
         guard configuration.mode == .nat || configuration.mode == .hostOnly else {
@@ -57,6 +59,7 @@ public final class ReservedVmnetNetwork: Network {
 
         log.info("creating vmnet network")
         self.log = log
+        self.resolvedPluginInfo = pluginInfo
         let initialState = State(networkState: .created(configuration))
         stateMutex = Mutex(initialState)
         log.info("created vmnet network")
@@ -84,6 +87,7 @@ public final class ReservedVmnetNetwork: Network {
                 ipv4Subnet: networkInfo.ipv4Subnet,
                 ipv4Gateway: networkInfo.ipv4Gateway,
                 ipv6Subnet: networkInfo.ipv6Subnet,
+                pluginInfo: resolvedPluginInfo
             )
             state.networkState = NetworkState.running(configuration, networkStatus)
             state.network = networkInfo.network

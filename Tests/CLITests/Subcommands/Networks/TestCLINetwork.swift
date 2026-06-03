@@ -265,10 +265,12 @@ class TestCLINetwork: CLITest {
                 name,
                 curlImage,
                 "curl",
+                "--connect-timeout",
+                "5",
                 "http://google.com",
             ])
 
-            #expect(failed == 6, "external connection should fail")
+            #expect(failed == 28, "external connection should fail")
         }
     }
 
