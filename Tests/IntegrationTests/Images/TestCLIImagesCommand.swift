@@ -19,8 +19,8 @@ import ContainerizationOCI
 import Foundation
 import Testing
 
-@Suite(.serialized)
-struct TestCLIImagesCommandSerial {
+@Suite
+struct TestCLIImagesCommand {
     private let alpine = ContainerFixture.warmupImages[0]  // ghcr.io/linuxcontainers/alpine:3.20
     private let alpine318 = ContainerFixture.warmupImages[1]  // ghcr.io/linuxcontainers/alpine:3.18
     private let busybox = ContainerFixture.warmupImages[2]  // ghcr.io/containerd/busybox:1.36

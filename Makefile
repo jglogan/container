@@ -204,7 +204,9 @@ WARMUP_FILTER = ImageWarmup
 CONCURRENT_TEST_SUITES ?= \
 	TestCLIStop/ \
 	TestCLIRmRaceCondition/ \
-	TestCLIExportCommand/
+	TestCLIExportCommand/ \
+	TestCLIImagesCommand/ \
+	TestCLIVolumes/
 CONCURRENT_FILTER = $(subst $(space),|,$(strip $(CONCURRENT_TEST_SUITES)))
 
 GLOBAL_TEST_SUITES ?= \
@@ -213,9 +215,10 @@ GLOBAL_TEST_SUITES ?= \
 	TestCLIBuilderLocalOutputSerial/ \
 	TestCLIBuilderSerial/ \
 	TestCLIBuilderTarExportSerial/ \
-	TestCLIImagesCommandSerial/ \
 	TestCLISystemDFSerial/ \
-	TestCLIKernelSetSerial/
+	TestCLIKernelSetSerial/ \
+	TestCLIVolumesSerial/ \
+	TestCLIAnonymousVolumesSerial/
 GLOBAL_FILTER = $(subst $(space),|,$(strip $(GLOBAL_TEST_SUITES)))
 
 INTEGRATION_SWIFT_EXTRA ?=
@@ -289,8 +292,6 @@ INTEGRATION_TEST_SUITES ?= \
 	TestCLIRunBase \
 	TestCLIRunInitImage \
 	TestCLIBuildBase \
-	TestCLIVolumes \
-	TestCLIAnonymousVolumes \
 	TestCLINotFound \
 	TestCLIMachineCommand \
 	TestCLIMachineRuntime \
