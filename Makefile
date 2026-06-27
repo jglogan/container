@@ -208,11 +208,13 @@ CONCURRENT_TEST_SUITES ?= \
 CONCURRENT_FILTER = $(subst $(space),|,$(strip $(CONCURRENT_TEST_SUITES)))
 
 GLOBAL_TEST_SUITES ?= \
-	TestCLIBuilderLifecycleSerial/ \
-	TestCLIBuilderSerial/ \
 	TestCLIBuilderEnvOnlySerial/ \
+	TestCLIBuilderLifecycleSerial/ \
 	TestCLIBuilderLocalOutputSerial/ \
-	TestCLIBuilderTarExportSerial/
+	TestCLIBuilderSerial/ \
+	TestCLIBuilderTarExportSerial/ \
+	TestCLIImagesCommandSerial/ \
+	TestCLISystemDFSerial
 GLOBAL_FILTER = $(subst $(space),|,$(strip $(GLOBAL_TEST_SUITES)))
 
 INTEGRATION_SWIFT_EXTRA ?=
@@ -283,7 +285,6 @@ INTEGRATION_TEST_SUITES ?= \
 	TestCLIPruneCommand \
 	TestCLIRegistry \
 	TestCLIStatsCommand \
-	TestCLIImagesCommand \
 	TestCLIRunBase \
 	TestCLIRunInitImage \
 	TestCLIBuildBase \
@@ -291,7 +292,6 @@ INTEGRATION_TEST_SUITES ?= \
 	TestCLIKernelSet \
 	TestCLIAnonymousVolumes \
 	TestCLINotFound \
-	TestCLISystemDF \
 	TestCLIMachineCommand \
 	TestCLIMachineRuntime \
 	TestCLINoParallelCases \
