@@ -214,7 +214,8 @@ GLOBAL_TEST_SUITES ?= \
 	TestCLIBuilderSerial/ \
 	TestCLIBuilderTarExportSerial/ \
 	TestCLIImagesCommandSerial/ \
-	TestCLISystemDFSerial
+	TestCLISystemDFSerial/ \
+	TestCLIKernelSetSerial/
 GLOBAL_FILTER = $(subst $(space),|,$(strip $(GLOBAL_TEST_SUITES)))
 
 INTEGRATION_SWIFT_EXTRA ?=
@@ -289,7 +290,6 @@ INTEGRATION_TEST_SUITES ?= \
 	TestCLIRunInitImage \
 	TestCLIBuildBase \
 	TestCLIVolumes \
-	TestCLIKernelSet \
 	TestCLIAnonymousVolumes \
 	TestCLINotFound \
 	TestCLIMachineCommand \
