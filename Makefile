@@ -202,12 +202,13 @@ PARALLEL_WIDTH ?= 2
 WARMUP_FILTER = ImageWarmup
 
 CONCURRENT_TEST_SUITES ?= \
-	TestCLIStop/ \
-	TestCLIRmRaceCondition/ \
+	TestCLIAnonymousVolumes/ \
 	TestCLIExportCommand/ \
 	TestCLIImagesCommand/ \
-	TestCLIVolumes/ \
-	TestCLIAnonymousVolumes/
+	TestCLINotFound/ \
+	TestCLIRmRaceCondition/ \
+	TestCLIStop/ \
+	TestCLIVolumes/
 CONCURRENT_FILTER = $(subst $(space),|,$(strip $(CONCURRENT_TEST_SUITES)))
 
 GLOBAL_TEST_SUITES ?= \
@@ -216,8 +217,8 @@ GLOBAL_TEST_SUITES ?= \
 	TestCLIBuilderLocalOutputSerial/ \
 	TestCLIBuilderSerial/ \
 	TestCLIBuilderTarExportSerial/ \
-	TestCLISystemDFSerial/ \
 	TestCLIKernelSetSerial/ \
+	TestCLISystemDFSerial/ \
 	TestCLIVolumesSerial/
 GLOBAL_FILTER = $(subst $(space),|,$(strip $(GLOBAL_TEST_SUITES)))
 
