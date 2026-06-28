@@ -206,7 +206,8 @@ CONCURRENT_TEST_SUITES ?= \
 	TestCLIRmRaceCondition/ \
 	TestCLIExportCommand/ \
 	TestCLIImagesCommand/ \
-	TestCLIVolumes/
+	TestCLIVolumes/ \
+	TestCLIAnonymousVolumes/
 CONCURRENT_FILTER = $(subst $(space),|,$(strip $(CONCURRENT_TEST_SUITES)))
 
 GLOBAL_TEST_SUITES ?= \
@@ -217,8 +218,7 @@ GLOBAL_TEST_SUITES ?= \
 	TestCLIBuilderTarExportSerial/ \
 	TestCLISystemDFSerial/ \
 	TestCLIKernelSetSerial/ \
-	TestCLIVolumesSerial/ \
-	TestCLIAnonymousVolumesSerial/
+	TestCLIVolumesSerial/
 GLOBAL_FILTER = $(subst $(space),|,$(strip $(GLOBAL_TEST_SUITES)))
 
 INTEGRATION_SWIFT_EXTRA ?=

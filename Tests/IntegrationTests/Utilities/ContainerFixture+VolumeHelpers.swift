@@ -43,6 +43,16 @@ extension ContainerFixture {
         try run(["volume", "rm", name]).status != 0
     }
 
+    /// Returns the names of all volume attachments on a container
+    /// (the UUID name for anonymous volumes, the explicit name for named volumes).
+    func getContainerMountedVolumeNames(_ containerName: String) throws -> [String] {
+        let inspect = try inspectContainer(containerName)
+        return inspect.configuration.mounts.compactMap { mount in
+            if case .volume(let name, _, _, _) = mount.type { return name }
+            return nil
+        }
+    }
+
     /// Returns the names of all anonymous volumes (UUID-format names) in the local store.
     func getAnonymousVolumeNames() throws -> [String] {
         let result = try run(["volume", "list", "--quiet"]).check()
