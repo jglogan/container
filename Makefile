@@ -246,7 +246,7 @@ endef
 # concurrent pass. WARMUP_FILTER, CONCURRENT_FILTER, and SERIAL_FILTER select
 # the three phases.
 PARALLEL_WIDTH ?= $(shell sysctl -n hw.physicalcpu)
-WARMUP_FILTER = ImageWarmup/
+WARMUP_FILTER = ImageWarmup/|BuilderWarmup/
 
 # Concurrent suites: Test*.swift files whose names do NOT end in Serial.
 CONCURRENT_TEST_SUITES ?= $(sort $(addsuffix /,$(basename $(notdir \
